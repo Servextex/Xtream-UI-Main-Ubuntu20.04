@@ -7,7 +7,7 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
 rDownloadURL = {"main": "https://github.com/Servextex/Xtream-UI-Main-Ubuntu20.04/releases/download/start/main_xui.zip", "sub": "https://github.com/Servextex/Xtream-UI-Main-Ubuntu20.04/releases/download/start/sub_xui.zip"}
-rPackages = ["libcurl4", "libxslt1-dev", "libgeoip-dev", "libonig-dev", "e2fsprogs", "wget", "mcrypt", "nscd", "htop", "zip", "unzip", "mc", "mariadb-server", "libpng16-16", "libzip5", "python3-paramiko", "python-is-python3"]
+rPackages = ["libcurl4", "libxslt1-dev", "libgeoip-dev", "libonig-dev", "e2fsprogs", "wget", "mcrypt", "nscd", "htop", "zip", "unzip", "mc", "mariadb-server", "libpng16-16", "libzip5", "python3-paramiko", "python-is-python3", "certbot", "python3-certbot-nginx"]
 rInstall = {"MAIN": "main", "LB": "sub"}
 rUpdate = {"UPDATE": "update"}
 rMySQLCnf = base64.b64decode("IyBYdHJlYW0gQ29kZXMKCltjbGllbnRdCnBvcnQgICAgICAgICAgICA9IDMzMDYKCltteXNxbGRfc2FmZV0KbmljZSAgICAgICAgICAgID0gMAoKW215c3FsZF0KdXNlciAgICAgICAgICAgID0gbXlzcWwKcG9ydCAgICAgICAgICAgID0gNzk5OQpiYXNlZGlyICAgICAgICAgPSAvdXNyCmRhdGFkaXIgICAgICAgICA9IC92YXIvbGliL215c3FsCnRtcGRpciAgICAgICAgICA9IC90bXAKbGMtbWVzc2FnZXMtZGlyID0gL3Vzci9zaGFyZS9teXNxbApza2lwLWV4dGVybmFsLWxvY2tpbmcKc2tpcC1uYW1lLXJlc29sdmU9MQoKYmluZC1hZGRyZXNzICAgICAgICAgICAgPSAqCmtleV9idWZmZXJfc2l6ZSA9IDEyOE0KCm15aXNhbV9zb3J0X2J1ZmZlcl9zaXplID0gNE0KbWF4X2FsbG93ZWRfcGFja2V0ICAgICAgPSA2NE0KbXlpc2FtLXJlY292ZXItb3B0aW9ucyA9IEJBQ0tVUAptYXhfbGVuZ3RoX2Zvcl9zb3J0X2RhdGEgPSA4MTkyCnF1ZXJ5X2NhY2hlX2xpbWl0ICAgICAgID0gNE0KcXVlcnlfY2FjaGVfc2l6ZSAgICAgICAgPSAwCnF1ZXJ5X2NhY2hlX3R5cGUJPSAwCgpleHBpcmVfbG9nc19kYXlzICAgICAgICA9IDEwCm1heF9iaW5sb2dfc2l6ZSAgICAgICAgID0gMTAwTQoKbWF4X2Nvbm5lY3Rpb25zICA9IDIwMDAgI3JlY29tbWVuZGVkIGZvciAxNkdCIHJhbSAKYmFja19sb2cgPSA0MDk2Cm9wZW5fZmlsZXNfbGltaXQgPSAxNjM4NAppbm5vZGJfb3Blbl9maWxlcyA9IDE2Mzg0Cm1heF9jb25uZWN0X2Vycm9ycyA9IDMwNzIKdGFibGVfb3Blbl9jYWNoZSA9IDQwOTYKdGFibGVfZGVmaW5pdGlvbl9jYWNoZSA9IDQwOTYKCgp0bXBfdGFibGVfc2l6ZSA9IDFHCm1heF9oZWFwX3RhYmxlX3NpemUgPSAxRwoKaW5ub2RiX2J1ZmZlcl9wb29sX3NpemUgPSAxMkcgI3JlY29tbWVuZGVkIGZvciAxNkdCIHJhbQppbm5vZGJfYnVmZmVyX3Bvb2xfaW5zdGFuY2VzID0gMQppbm5vZGJfcmVhZF9pb190aHJlYWRzID0gNjQKaW5ub2RiX3dyaXRlX2lvX3RocmVhZHMgPSA2NAppbm5vZGJfdGhyZWFkX2NvbmN1cnJlbmN5ID0gMAppbm5vZGJfZmx1c2hfbG9nX2F0X3RyeF9jb21taXQgPSAwCmlubm9kYl9mbHVzaF9tZXRob2QgPSBPX0RJUkVDVApwZXJmb3JtYW5jZV9zY2hlbWEgPSBPTgppbm5vZGItZmlsZS1wZXItdGFibGUgPSAxCmlubm9kYl9pb19jYXBhY2l0eT0yMDAwMAppbm5vZGJfdGFibGVfbG9ja3MgPSAwCmlubm9kYl9sb2NrX3dhaXRfdGltZW91dCA9IDAKaW5ub2RiX2RlYWRsb2NrX2RldGVjdCA9IDAKaW5ub2RiX2xvZ19maWxlX3NpemUgPSA1MTJNCgpzcWwtbW9kZT0iTk9fRU5HSU5FX1NVQlNUSVRVVElPTiIKCltteXNxbGR1bXBdCnF1aWNrCnF1b3RlLW5hbWVzCm1heF9hbGxvd2VkX3BhY2tldCAgICAgID0gMTZNCgpbbXlzcWxdCgpbaXNhbWNoa10Ka2V5X2J1ZmZlcl9zaXplICAgICAgICAgICAgICA9IDE2TQo=")
@@ -233,21 +233,134 @@ def configure():
     if not "xtream-codes.com" in open("/etc/hosts").read(): os.system('echo "127.0.0.1    xtream-codes.com" >> /etc/hosts')
     if not "@reboot root /home/xtreamcodes/iptv_xtream_codes/start_services.sh" in open("/etc/crontab").read(): os.system('echo "@reboot root /home/xtreamcodes/iptv_xtream_codes/start_services.sh" >> /etc/crontab')
 
+def configurePHP():
+    printc("Optimizing PHP Configuration")
+    phpPath = "/home/xtreamcodes/iptv_xtream_codes/php/etc/php.ini"
+    if os.path.exists(phpPath):
+        # Optimizar parámetros clave de PHP
+        replacements = {
+            "max_execution_time = 30": "max_execution_time = 300",
+            "memory_limit = 128M": "memory_limit = 512M",
+            "post_max_size = 8M": "post_max_size = 100M",
+            "upload_max_filesize = 2M": "upload_max_filesize = 100M",
+            "default_socket_timeout = 60": "default_socket_timeout = 300"
+        }
+        
+        try:
+            content = open(phpPath, "r").read()
+            for old, new in replacements.items():
+                content = content.replace(old, new)
+            
+            open(phpPath, "w").write(content)
+            printc("PHP configurado exitosamente", col.BRIGHT_GREEN)
+        except Exception as e:
+            printc("Error al configurar PHP: %s" % str(e), col.BRIGHT_RED)
+
+
+def testConnectivity():
+    printc("Probando la conectividad de red")
+    localIP = getIP()
+    
+    # Prueba de puertos abiertos
+    nginxStatus = os.popen("netstat -tuln | grep -E ':(80|25500)'")
+    nginxPorts = nginxStatus.read().strip()
+    if nginxPorts:
+        printc("Puertos de Nginx abiertos: %s" % nginxPorts, col.BRIGHT_GREEN)
+    else:
+        printc("¡Advertencia! No se detectaron puertos de Nginx abiertos.", col.BRIGHT_RED)
+    
+    # Prueba de acceso local al panel admin
+    try:
+        testURL = "http://localhost:25500/"
+        request = Request(testURL)
+        response = urlopen(request, timeout=10)
+        printc("Panel administrativo accesible localmente: Estado %d" % response.getcode(), col.BRIGHT_GREEN)
+    except Exception as e:
+        printc("Error accediendo al panel administrativo: %s" % str(e), col.BRIGHT_RED)
+
+
 def start(first=True):
-    if first: printc("Starting Xtream Codes")
-    else: printc("Restarting Xtream Codes")
-    os.system("/home/xtreamcodes/iptv_xtream_codes/start_services.sh > /dev/null")
+    if first: printc("Iniciando Xtream Codes")
+    else: printc("Reiniciando Xtream Codes")
+    
+    # Ejecutar con output para diagnóstico
+    result = os.popen("/home/xtreamcodes/iptv_xtream_codes/start_services.sh").read()
+    
+    # Verificar servicios críticos
+    services = ["nginx", "php-fpm", "mysql"]
+    for service in services:
+        proc_check = os.popen(f"ps aux | grep -v grep | grep {service}").read().strip()
+        if not proc_check:
+            printc(f"¡Advertencia! {service} podría no estar ejecutándose correctamente", col.BRIGHT_YELLOW)
+    
+    # Verificar puerto administrativo
+    port_check = os.popen("netstat -tuln | grep ':25500'").read().strip()
+    if not port_check:
+        printc("¡Advertencia! El puerto 25500 del panel administrativo no está abierto", col.BRIGHT_YELLOW)
 
 def modifyNginx():
     printc("Modifying Nginx")
     rPath = "/home/xtreamcodes/iptv_xtream_codes/nginx/conf/nginx.conf"
+    
+    # Verificar si ya está definida la zona de limitación de solicitudes
+    rPrevData = open(rPath, "r").read()
+    if not "limit_req_zone" in rPrevData:
+        # Añadir zona de limitación al inicio del archivo
+        with open(rPath, "r") as f:
+            content = f.read()
+        with open(rPath, "w") as f:
+            f.write("limit_req_zone $binary_remote_addr zone=one:10m rate=5r/s;\n" + content)
+        
+    # Volver a leer el archivo después de posibles modificaciones
     rPrevData = open(rPath, "r").read()
     if not "listen 25500;" in rPrevData:
         shutil.copy(rPath, "%s.xc" % rPath)
-        rData = "}".join(rPrevData.split("}")[:-1]) + "    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n\n        location ~ \.php$ {\n			limit_req zone=one burst=8;\n            try_files $uri =404;\n			fastcgi_index index.php;\n			fastcgi_pass php;\n			include fastcgi_params;\n			fastcgi_buffering on;\n			fastcgi_buffers 96 32k;\n			fastcgi_buffer_size 32k;\n			fastcgi_max_temp_file_size 0;\n			fastcgi_keep_conn on;\n			fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n			fastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"
+        rData = "}".join(rPrevData.split("}")[:-1]) + """    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n        client_max_body_size 100M;\n        client_body_timeout 300s;\n        \n        # Timeouts optimizados\n        proxy_connect_timeout 600;\n        proxy_send_timeout 600;\n        proxy_read_timeout 600;\n        fastcgi_read_timeout 600;\n\n        location ~ \.php$ {\n\t\t\tlimit_req zone=one burst=10 nodelay;\n            try_files $uri =404;\n\t\t\tfastcgi_index index.php;\n\t\t\tfastcgi_pass php;\n\t\t\tinclude fastcgi_params;\n\t\t\tfastcgi_buffering on;\n\t\t\tfastcgi_buffers 96 32k;\n\t\t\tfastcgi_buffer_size 32k;\n\t\t\tfastcgi_max_temp_file_size 0;\n\t\t\tfastcgi_keep_conn on;\n\t\t\tfastcgi_connect_timeout 300s;\n\t\t\tfastcgi_send_timeout 300s;\n\t\t\tfastcgi_read_timeout 300s;\n\t\t\tfastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\t\t\tfastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"""
         rFile = open(rPath, "w")
         rFile.write(rData)
         rFile.close()
+
+def setupSSL(domain=None):
+    """Configurar SSL utilizando Let's Encrypt"""
+    if not domain:
+        printc("Necesita proporcionar un dominio válido para configurar SSL", col.BRIGHT_RED)
+        return False
+    
+    printc(f"Configurando SSL para el dominio: {domain}", col.BRIGHT_CYAN)
+    
+    # Modificar nginx para usar el dominio
+    nginxAdminPath = "/home/xtreamcodes/iptv_xtream_codes/nginx/conf/nginx.conf"
+    
+    # Respaldo del archivo de configuración
+    shutil.copy(nginxAdminPath, f"{nginxAdminPath}.bak_ssl")
+    
+    # Leer la configuración actual
+    content = open(nginxAdminPath, "r").read()
+    
+    # Modificar para usar el dominio en puerto 25500
+    modified_content = content.replace("listen 25500;", f"listen 25500;\n        server_name {domain};")
+    
+    with open(nginxAdminPath, "w") as f:
+        f.write(modified_content)
+    
+    # Reiniciar Nginx para aplicar cambios
+    os.system("/home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx -s reload")
+    
+    # Ejecutar certbot para obtener certificado
+    try:
+        printc("Obteniendo certificado SSL con Let's Encrypt...", col.BRIGHT_GREEN)
+        result = os.system(f"certbot --nginx --non-interactive --agree-tos --email admin@{domain} -d {domain} --redirect")
+        
+        if result == 0:
+            printc("¡Certificado SSL instalado correctamente!", col.BRIGHT_GREEN)
+            return True
+        else:
+            printc("Error al obtener certificado SSL. Verifica que el dominio apunte correctamente a este servidor.", col.BRIGHT_RED)
+            return False
+    except Exception as e:
+        printc(f"Error configurando SSL: {str(e)}", col.BRIGHT_RED)
+        return False
+
 
 if __name__ == "__main__":
     try: rVersion = os.popen('lsb_release -sr').read().strip()
@@ -255,15 +368,15 @@ if __name__ == "__main__":
     if not rVersion in rVersions:
         printc("Unsupported Operating System, Works only on Ubuntu Server 20")
         sys.exit(1)
-    printc("X-UI 22f Ubuntu %s Installer - Servextex" % rVersion, col.GREEN, 2)
+    printc("X-UI 22f Ubuntu %s Installer - Servextex (Mejorado)" % rVersion, col.GREEN, 2)
     print(" ")
-    rType = input("  Installation Type [MAIN, LB, UPDATE]: ")
+    rType = input("  Tipo de instalación [MAIN, LB, UPDATE]: ")
     print(" ")
     if rType.upper() in ["MAIN", "LB"]:
         if rType.upper() == "LB":
-            rHost = input("  Main Server IP Address: ")
-            rPassword = input("  MySQL Password: ")
-            try: rServerID = int(input("  Load Balancer Server ID: "))
+            rHost = input("  Dirección IP del servidor principal: ")
+            rPassword = input("  Contraseña MySQL: ")
+            try: rServerID = int(input("  ID del servidor de balanceo de carga: "))
             except: rServerID = -1
             print(" ")
         else:
@@ -273,9 +386,19 @@ if __name__ == "__main__":
         rUsername = "user_iptvpro"
         rDatabase = "xtream_iptvpro"
         rPort = 7999
+        
+        # Preguntar si se usará dominio y SSL
+        useSSL = input("  ¿Configurar con dominio y SSL? (S/N): ").upper() == "S"
+        domain = None
+        if useSSL:
+            domain = input("  Ingrese el nombre de dominio (ej: panel.sudominio.com): ").strip()
+            if not domain:
+                printc("Dominio no válido. Continuando sin SSL.", col.BRIGHT_YELLOW)
+                useSSL = False
+        
         if len(rHost) > 0 and len(rPassword) > 0 and rServerID > -1:
-            printc("Start installation? Y/N", col.BRIGHT_YELLOW)
-            if input("  ").upper() == "Y":
+            printc("¿Iniciar instalación? S/N", col.BRIGHT_YELLOW)
+            if input("  ").upper() == "S":
                 print(" ")
                 rRet = prepare(rType.upper())
                 if not install(rType.upper()): sys.exit(1)
@@ -285,27 +408,46 @@ if __name__ == "__main__":
                 configure()
                 if rType.upper() == "MAIN": 
                     modifyNginx()
+                    configurePHP() # Optimizar configuración de PHP
                     update(rType.upper())
                 start()
-                printc("Installation completed!", col.GREEN, 2)
+                
+                # Configurar SSL si se seleccionó
+                ssl_success = False
+                if useSSL and domain:
+                    ssl_success = setupSSL(domain)
+                
+                # Probar conectividad
+                testConnectivity()
+                
+                printc("¡Instalación completada!", col.GREEN, 2)
                 if rType.upper() == "MAIN":
-                    printc("Please store your MySQL password: %s" % rPassword, col.BRIGHT_YELLOW)
-                    printc("Admin UI Wan IP: http://%s:25500" % getIP(), col.BRIGHT_YELLOW)
-                    printc("Admin UI default login is admin/admin", col.BRIGHT_YELLOW)
-                    printc("Save Credentials is file to /root/credentials.txt", col.BRIGHT_YELLOW)
+                    printc("Guarde su contraseña MySQL: %s" % rPassword, col.BRIGHT_YELLOW)
+                    
+                    # URL con protocolo correcto según SSL
+                    protocol = "https" if (useSSL and ssl_success) else "http"
+                    host = domain if (useSSL and ssl_success) else getIP()
+                    printc(f"Panel de administración: {protocol}://{host}:25500", col.BRIGHT_YELLOW)
+                    printc("Credenciales por defecto: admin/admin", col.BRIGHT_YELLOW)
+                    printc("Credenciales guardadas en el archivo /root/credentials.txt", col.BRIGHT_YELLOW)
+                    
                     rFile = open("/root/credentials.txt", "w")
-                    rFile.write("MySQL password: %s\n" % rPassword)
-                    rFile.write("Admin UI Wan IP: http://%s:25500\n" % getIP())
-                    rFile.write("Admin UI default login is admin/admin\n")
+                    rFile.write("Contraseña MySQL: %s\n" % rPassword)
+                    rFile.write(f"Panel de administración: {protocol}://{host}:25500\n")
+                    rFile.write("Credenciales por defecto: admin/admin\n")
+                    if useSSL:
+                        rFile.write(f"SSL configurado: {'Sí' if ssl_success else 'No (ver errores)'}\n")
                     rFile.close()
-            else: printc("Installation cancelled", col.BRIGHT_RED)
-        else: printc("Invalid entries", col.BRIGHT_RED)
+            else: printc("Instalación cancelada", col.BRIGHT_RED)
+        else: printc("Entradas no válidas", col.BRIGHT_RED)
     elif rType.upper() == "UPDATE":
         if os.path.exists("/home/xtreamcodes/iptv_xtream_codes/wwwdir/api.php"):
-            printc("Update Admin Panel? Y/N?", col.BRIGHT_YELLOW)
-            if input("  ").upper() == "Y":
+            printc("¿Actualizar panel de administración? S/N?", col.BRIGHT_YELLOW)
+            if input("  ").upper() == "S":
                 if not update(rType.upper()): sys.exit(1)
-                printc("Installation completed!", col.GREEN, 2)
+                configurePHP() # Optimizar configuración de PHP
+                printc("¡Instalación completada!", col.GREEN, 2)
                 start()
-            else: printc("Install Xtream Codes Main first!", col.BRIGHT_RED)
-    else: printc("Invalid installation type", col.BRIGHT_RED)
+                testConnectivity() # Probar conexión después de actualizar
+            else: printc("¡Instale Xtream Codes Main primero!", col.BRIGHT_RED)
+    else: printc("Tipo de instalación no válido", col.BRIGHT_RED)
