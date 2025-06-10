@@ -554,31 +554,88 @@ def modifyNginx():
     os.system("chmod +x /home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx")
     os.system("chmod +x /home/xtreamcodes/iptv_xtream_codes/nginx_rtmp/sbin/nginx_rtmp")
     
-    # Verificar si ya está definida la zona de limitación de solicitudes
-    rPrevData = open(rPath, "r").read()
-    if not "limit_req_zone" in rPrevData:
-        # Añadir zona de limitación al inicio del archivo
-        with open(rPath, "r") as f:
-            content = f.read()
-        with open(rPath, "w") as f:
-            f.write("limit_req_zone $binary_remote_addr zone=one:10m rate=5r/s;\n" + content)
+    # Verificar si el archivo de configuración existe
+    if not os.path.exists(rPath):
+        printc("¡Error! No existe archivo de configuración de Nginx.", col.BRIGHT_RED)
+        return
         
-    # Volver a leer el archivo después de posibles modificaciones
-    rPrevData = open(rPath, "r").read()
-    if not "listen 25500;" in rPrevData:
-        shutil.copy(rPath, "%s.xc" % rPath)
-        rData = "}".join(rPrevData.split("}")[:-1]) + """    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n        client_max_body_size 100M;\n        client_body_timeout 300s;\n        access_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_access.log;\n        error_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_error.log;\n        \n        # Timeouts optimizados\n        proxy_connect_timeout 600;\n        proxy_send_timeout 600;\n        proxy_read_timeout 600;\n        fastcgi_read_timeout 600;\n\n        location ~ \.php$ {\n\t\t\tlimit_req zone=one burst=10 nodelay;\n            try_files $uri =404;\n\t\t\tfastcgi_index index.php;\n\t\t\tfastcgi_pass php;\n\t\t\tinclude fastcgi_params;\n\t\t\tfastcgi_buffering on;\n\t\t\tfastcgi_buffers 96 32k;\n\t\t\tfastcgi_buffer_size 32k;\n\t\t\tfastcgi_max_temp_file_size 0;\n\t\t\tfastcgi_keep_conn on;\n\t\t\tfastcgi_connect_timeout 300s;\n\t\t\tfastcgi_send_timeout 300s;\n\t\t\tfastcgi_read_timeout 300s;\n\t\t\tfastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\t\t\tfastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"""
-        rFile = open(rPath, "w")
-        rFile.write(rData)
-        rFile.close()
+    try:
+        # Leer el archivo de configuración y hacer copia de seguridad
+        shutil.copy(rPath, rPath + ".bak")
+        with open(rPath, "r") as f:
+            rPrevData = f.read()
+        
+        # Solucionar el problema del usuario xtreamcodes
+        # Comprobar si hay una directiva 'user xtreamcodes;' al principio del archivo
+        new_content = rPrevData
+        if "user xtreamcodes;" in rPrevData:
+            printc("Adaptando configuración de usuarios en Nginx...", col.BRIGHT_YELLOW)
+            
+            # Usar root como usuario preferido para evitar problemas de permisos
+            new_content = rPrevData.replace("user xtreamcodes;", "user root;")
+            printc("Usando usuario 'root' para Nginx - Mejor compatibilidad con Xtream UI", col.BRIGHT_GREEN)
+            printc("Nota: Aunque menos seguro, esto evitará la mayoría de problemas de permisos", col.BRIGHT_YELLOW)
+                
+            # Escribir la configuración modificada
+            with open(rPath, "w") as f:
+                f.write(new_content)
+        
+        # Verificar si ya está definida la zona de limitación de solicitudes
+        if not "limit_req_zone" in new_content:
+            # Añadir zona de limitación al inicio del archivo
+            new_content = "limit_req_zone $binary_remote_addr zone=one:10m rate=5r/s;\n" + new_content
+            
+            # Escribir la configuración con zona de limitación
+            with open(rPath, "w") as f:
+                f.write(new_content)
+            
+        # Volver a leer el archivo después de posibles modificaciones
+        with open(rPath, "r") as f:
+            rPrevData = f.read()
+            
+        if not "listen 25500;" in rPrevData:
+            rData = "}".join(rPrevData.split("}")[:-1]) + """    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n        client_max_body_size 100M;\n        client_body_timeout 300s;\n        access_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_access.log;\n        error_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_error.log;\n        \n        # Timeouts optimizados\n        proxy_connect_timeout 600;\n        proxy_send_timeout 600;\n        proxy_read_timeout 600;\n        fastcgi_read_timeout 600;\n\n        location ~ \.php$ {\n\t\t\tlimit_req zone=one burst=10 nodelay;\n            try_files $uri =404;\n\t\t\tfastcgi_index index.php;\n\t\t\tfastcgi_pass php;\n\t\t\tinclude fastcgi_params;\n\t\t\tfastcgi_buffering on;\n\t\t\tfastcgi_buffers 96 32k;\n\t\t\tfastcgi_buffer_size 32k;\n\t\t\tfastcgi_max_temp_file_size 0;\n\t\t\tfastcgi_keep_conn on;\n\t\t\tfastcgi_connect_timeout 300s;\n\t\t\tfastcgi_send_timeout 300s;\n\t\t\tfastcgi_read_timeout 300s;\n\t\t\tfastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\t\t\tfastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"""
+            with open(rPath, "w") as f:
+                f.write(rData)
+                
+        printc("Configuración de Nginx actualizada correctamente", col.BRIGHT_GREEN)
+    except Exception as e:
+        printc(f"Error modificando Nginx: {str(e)}", col.BRIGHT_RED)
+        if os.path.exists(rPath + ".bak"):
+            shutil.copy(rPath + ".bak", rPath)
+            printc("Se ha restaurado la configuración de respaldo", col.BRIGHT_YELLOW)
     
     # Verificar archivos de configuración PHP
     phpFpmConfPath = "/home/xtreamcodes/iptv_xtream_codes/php/etc/php-fpm.conf"
     if os.path.exists(phpFpmConfPath):
         printc("Optimizando PHP-FPM para Nginx...", col.BRIGHT_GREEN)
-        # Aumentar el número máximo de procesos PHP-FPM
-        os.system(f"sed -i 's/max_children = 5/max_children = 30/g' {phpFpmConfPath}")
-        os.system(f"sed -i 's/request_terminate_timeout = 300/request_terminate_timeout = 600/g' {phpFpmConfPath}")
+        # Realizamos una copia de seguridad primero
+        shutil.copy(phpFpmConfPath, phpFpmConfPath + ".bak")
+        
+        # Verificar si existe la directiva 'user = xtreamcodes'
+        with open(phpFpmConfPath, "r") as f:
+            php_content = f.read()
+            
+        # Buscar y reemplazar el usuario si es necesario
+        has_changed = False
+        if "user = xtreamcodes" in php_content:
+            # Usar root para mantener coherencia con la configuración de Nginx
+            php_content = php_content.replace("user = xtreamcodes", "user = root")
+            php_content = php_content.replace("group = xtreamcodes", "group = root")
+            has_changed = True
+            printc("PHP-FPM configurado para usar 'root' - Mejor compatibilidad", col.BRIGHT_GREEN)
+            printc("Nota: Usando root para PHP-FPM garantiza máxima compatibilidad", col.BRIGHT_YELLOW)
+        
+        # Optimizar otros parámetros
+        php_content = php_content.replace("max_children = 5", "max_children = 30")
+        php_content = php_content.replace("request_terminate_timeout = 300", "request_terminate_timeout = 600")
+        has_changed = True
+        
+        # Guardar los cambios
+        if has_changed:
+            with open(phpFpmConfPath, "w") as f:
+                f.write(php_content)
+            printc("Configuración de PHP-FPM optimizada", col.BRIGHT_GREEN)
     else:
         printc("¡Advertencia! No se encuentra el archivo de configuración PHP-FPM.", col.BRIGHT_YELLOW)
 
