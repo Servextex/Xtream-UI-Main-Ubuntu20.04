@@ -49,13 +49,54 @@ def getVersion():
     try: return os.popen("lsb_release -d").read().split(":")[-1].strip()
     except: return ""
 
-def printc(rText, rColour=col.BRIGHT_GREEN, rPadding=0, rLimit=46):
-    print("%s ┌─────────────────────────────────────────────────┐ %s" % (rColour, col.ENDC))
-    for i in range(rPadding): print("%s │                                                 │ %s" % (rColour, col.ENDC))
-    array = [rText[i:i+rLimit] for i in range(0, len(rText), rLimit)]
-    for i in array : print("%s │ %s%s%s │ %s" % (rColour, " "*round(23-(len(i)/2)), i, " "*round(46-(22-(len(i)/2))-len(i)), col.ENDC))
-    for i in range(rPadding): print("%s │                                                 │ %s" % (rColour, col.ENDC))
-    print("%s └─────────────────────────────────────────────────┘ %s" % (rColour, col.ENDC))
+def printc(rText, rColour=col.BRIGHT_GREEN, rPadding=0, rLimit=None):
+    # Dividir el texto en líneas si contiene saltos de línea
+    lines = rText.split('\n')
+    
+    # Calcular el ancho máximo necesario para el cuadro
+    max_width = 50  # Ancho mínimo
+    for line in lines:
+        if len(line) > max_width:
+            max_width = len(line)
+    
+    # Asegurar que el ancho sea al menos 50 caracteres y añadir margen
+    max_width = max(max_width + 6, 50)
+    
+    # Si se especificó un límite, usarlo para dividir líneas largas
+    if rLimit:
+        new_lines = []
+        for line in lines:
+            if len(line) > rLimit:
+                # Dividir la línea en chunks del tamaño rLimit
+                chunks = [line[i:i+rLimit] for i in range(0, len(line), rLimit)]
+                new_lines.extend(chunks)
+            else:
+                new_lines.append(line)
+        lines = new_lines
+    
+    # Crear la parte superior del cuadro
+    top_border = "┌" + "─" * (max_width) + "┐"
+    print("%s %s %s" % (rColour, top_border, col.ENDC))
+    
+    # Imprimir el padding superior
+    for _ in range(rPadding):
+        print("%s │%s│ %s" % (rColour, " " * max_width, col.ENDC))
+    
+    # Imprimir cada línea centrada
+    for line in lines:
+        # Calcular los espacios para centrar
+        padding = max_width - len(line)
+        left_padding = padding // 2
+        right_padding = padding - left_padding
+        print("%s │%s%s%s│ %s" % (rColour, " " * left_padding, line, " " * right_padding, col.ENDC))
+    
+    # Imprimir el padding inferior
+    for _ in range(rPadding):
+        print("%s │%s│ %s" % (rColour, " " * max_width, col.ENDC))
+    
+    # Crear la parte inferior del cuadro
+    bottom_border = "└" + "─" * (max_width) + "┘"
+    print("%s %s %s" % (rColour, bottom_border, col.ENDC))
     print(" ")
 
 def setupXtreamUser():
