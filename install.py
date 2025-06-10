@@ -94,19 +94,20 @@ def prepare(rType="MAIN"):
 
 def install(rType="MAIN"):
     global rInstall, rDownloadURL
-    printc("Downloading Software")
+    printc("Descargando software")
     try: rURL = rDownloadURL[rInstall[rType]]
     except:
-        printc("Invalid download URL!", col.BRIGHT_RED)
+        printc("¡URL de descarga no válida!", col.BRIGHT_RED)
         return False
     os.system('wget -q -O "/tmp/xtreamcodes.zip" "%s"' % rURL)
     if os.path.exists("/tmp/xtreamcodes.zip"):
-        printc("Installing Software")
-        os.system('unzip "/tmp/xtreamcodes.zip" -d "/home/xtreamcodes/" > /dev/null')
+        printc("Instalando software")
+        # Añadido el parámetro -o para sobrescribir automáticamente sin preguntar
+        os.system('unzip -o "/tmp/xtreamcodes.zip" -d "/home/xtreamcodes/" > /dev/null')
         try: os.remove("/tmp/xtreamcodes.zip")
         except: pass
         return True
-    printc("Failed to download installation file!", col.BRIGHT_RED)
+    printc("¡Error al descargar el archivo de instalación!", col.BRIGHT_RED)
     return False
     
 def update(rType="MAIN"):
