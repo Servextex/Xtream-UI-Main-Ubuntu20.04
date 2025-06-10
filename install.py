@@ -7,7 +7,7 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import time
 
-rDownloadURL = {"main": "https://github.com/Servextex/xtream-ui-ubuntu/releases/download/start/iptv_xtream_codes.zip", "sub": "https://github.com/Servextex/Xtream-UI-Main-Ubuntu20.04/releases/download/start/sub_xui.zip"}
+rDownloadURL = {"main": "https://github.com/Servextex/Xtream-UI-Main-Ubuntu20.04/releases/download/start/main_xui.zip", "sub": "https://github.com/Servextex/Xtream-UI-Main-Ubuntu20.04/releases/download/start/sub_xui.zip"}
 rPackages = ["libcurl4", "libxslt1-dev", "libgeoip-dev", "libonig-dev", "e2fsprogs", "wget", "mcrypt", "nscd", "htop", "zip", "unzip", "mc", "mariadb-server", "libpng16-16", "libzip5", "python3-paramiko", "python-is-python3", "certbot", "python3-certbot-nginx"]
 rInstall = {"MAIN": "main", "LB": "sub"}
 rUpdate = {"UPDATE": "update"}
