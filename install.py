@@ -259,49 +259,211 @@ def configurePHP():
 
 
 def testConnectivity():
-    printc("Probando la conectividad de red")
+    printc("Diagnóstico completo del sistema")
     localIP = getIP()
     
-    # Prueba de puertos abiertos
-    nginxStatus = os.popen("netstat -tuln | grep -E ':(80|25500)'")
-    nginxPorts = nginxStatus.read().strip()
-    if nginxPorts:
-        printc("Puertos de Nginx abiertos: %s" % nginxPorts, col.BRIGHT_GREEN)
-    else:
-        printc("¡Advertencia! No se detectaron puertos de Nginx abiertos.", col.BRIGHT_RED)
+    # 1. Verificar que los binarios están presentes y con permisos de ejecución
+    binarios = [
+        "/home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx",
+        "/home/xtreamcodes/iptv_xtream_codes/nginx_rtmp/sbin/nginx_rtmp",
+        "/home/xtreamcodes/iptv_xtream_codes/php/sbin/php-fpm"
+    ]
     
-    # Prueba de acceso local al panel admin
+    printc("Verificando binarios esenciales:", col.BRIGHT_CYAN)
+    for binario in binarios:
+        if os.path.exists(binario):
+            permisos = oct(os.stat(binario).st_mode)[-3:]
+            if permisos == "755" or permisos == "775" or permisos == "777":
+                printc(f"  ✔ {os.path.basename(binario)} encontrado y con permisos de ejecución", col.BRIGHT_GREEN)
+            else:
+                printc(f"  ✘ {os.path.basename(binario)} encontrado pero SIN permisos de ejecución", col.BRIGHT_RED)
+                os.system(f"chmod +x {binario}")
+                printc(f"    → Permisos corregidos para {os.path.basename(binario)}", col.BRIGHT_GREEN)
+        else:
+            printc(f"  ✘ {os.path.basename(binario)} NO encontrado. Instalación incompleta", col.BRIGHT_RED)
+    
+    # 2. Verificar procesos en ejecución
+    printc("\nVerificando procesos en ejecución:", col.BRIGHT_CYAN)
+    procesos = ["nginx", "php-fpm", "mysql"]
+    for proceso in procesos:
+        proc_count = int(os.popen(f"ps aux | grep -v grep | grep {proceso} | wc -l").read().strip())
+        if proc_count > 0:
+            printc(f"  ✔ {proceso}: {proc_count} procesos en ejecución", col.BRIGHT_GREEN)
+        else:
+            printc(f"  ✘ {proceso}: no se está ejecutando", col.BRIGHT_RED)
+    
+    # 3. Verificar logs en busca de errores
+    printc("\nVerificando archivos de log:", col.BRIGHT_CYAN)
+    logs = [
+        "/home/xtreamcodes/iptv_xtream_codes/logs/error.log",
+        "/home/xtreamcodes/iptv_xtream_codes/logs/admin_error.log",
+        "/home/xtreamcodes/iptv_xtream_codes/logs/php_error.log"
+    ]
+    for log in logs:
+        if os.path.exists(log):
+            # Mostrar últimas 5 líneas de errores
+            tail_errors = os.popen(f"tail -n 5 {log} | grep -i 'error'").read().strip()
+            if tail_errors:
+                printc(f"  ⚠ {os.path.basename(log)}: Errores encontrados", col.BRIGHT_YELLOW)
+                for line in tail_errors.split("\n")[:3]:
+                    if line.strip():
+                        printc(f"    → {line[:100]}{'...' if len(line) > 100 else ''}", col.BRIGHT_YELLOW)
+            else:
+                printc(f"  ✔ {os.path.basename(log)}: Sin errores recientes", col.BRIGHT_GREEN)
+        else:
+            os.system(f"touch {log}")
+            printc(f"  ⚠ {os.path.basename(log)}: No existía, se ha creado", col.BRIGHT_YELLOW)
+    
+    # 4. Prueba de puertos abiertos
+    printc("\nVerificando puertos:", col.BRIGHT_CYAN)
+    nginxStatus = os.popen("netstat -tuln | grep -E ':(25500)'").read().strip()
+    if nginxStatus:
+        printc(f"  ✔ Puerto administrativo 25500 abierto", col.BRIGHT_GREEN)
+    else:
+        printc("  ✘ Puerto administrativo 25500 NO está abierto", col.BRIGHT_RED)
+        # Intentar corregir reiniciando nginx
+        printc("    → Intentando reiniciar Nginx...", col.BRIGHT_YELLOW)
+        os.system("/home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx -s reload")
+    
+    # 5. Prueba de acceso local al panel admin
+    printc("\nProbando acceso al panel admin:", col.BRIGHT_CYAN)
     try:
         testURL = "http://localhost:25500/"
         request = Request(testURL)
         response = urlopen(request, timeout=10)
-        printc("Panel administrativo accesible localmente: Estado %d" % response.getcode(), col.BRIGHT_GREEN)
+        printc(f"  ✔ Panel administrativo accesible localmente: Estado {response.getcode()}", col.BRIGHT_GREEN)
     except Exception as e:
-        printc("Error accediendo al panel administrativo: %s" % str(e), col.BRIGHT_RED)
+        printc(f"  ✘ Error accediendo al panel administrativo: {str(e)}", col.BRIGHT_RED)
+        
+        # Sugerencias basadas en errores comunes
+        if "Connection refused" in str(e):
+            printc("    → Recomendación: Verifica que Nginx esté ejecutándose", col.BRIGHT_YELLOW)
+            printc("    → Ejecuta: /home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx", col.BRIGHT_YELLOW)
+        elif "timed out" in str(e):
+            printc("    → Recomendación: Posible bloqueo en PHP-FPM", col.BRIGHT_YELLOW)
+            printc("    → Ejecuta: ps aux | grep php-fpm | grep -v grep && /home/xtreamcodes/iptv_xtream_codes/php/sbin/php-fpm --fpm-config /home/xtreamcodes/iptv_xtream_codes/php/etc/php-fpm.conf", col.BRIGHT_YELLOW)
+            
+    # 6. Instrucciones de reinicio manual
+    printc("\nComandos para reinicio manual en caso de problemas:", col.BRIGHT_CYAN)
+    printc("  1. Reiniciar todos los servicios:", col.BRIGHT_YELLOW)
+    printc("     /home/xtreamcodes/iptv_xtream_codes/start_services.sh", col.WHITE)
+    printc("  2. Reiniciar Nginx solamente:", col.BRIGHT_YELLOW)
+    printc("     /home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx -s stop && /home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx", col.WHITE)
+    printc("  3. Reiniciar PHP-FPM solamente:", col.BRIGHT_YELLOW)
+    printc("     kill -9 $(ps aux | grep php-fpm | grep -v grep | awk '{print $2}') && /home/xtreamcodes/iptv_xtream_codes/php/sbin/php-fpm --fpm-config /home/xtreamcodes/iptv_xtream_codes/php/etc/php-fpm.conf", col.WHITE)
 
 
 def start(first=True):
-    if first: printc("Iniciando Xtream Codes")
-    else: printc("Reiniciando Xtream Codes")
+    if first: printc("Iniciando servicios de Xtream Codes")
+    else: printc("Reiniciando servicios de Xtream Codes")
     
-    # Ejecutar con output para diagnóstico
-    result = os.popen("/home/xtreamcodes/iptv_xtream_codes/start_services.sh").read()
+    # Verificar que los binarios existen y tienen permisos de ejecución
+    binarios = {
+        "nginx": "/home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx",
+        "nginx_rtmp": "/home/xtreamcodes/iptv_xtream_codes/nginx_rtmp/sbin/nginx_rtmp",
+        "php-fpm": "/home/xtreamcodes/iptv_xtream_codes/php/sbin/php-fpm"
+    }
     
-    # Verificar servicios críticos
-    services = ["nginx", "php-fpm", "mysql"]
-    for service in services:
-        proc_check = os.popen(f"ps aux | grep -v grep | grep {service}").read().strip()
-        if not proc_check:
-            printc(f"¡Advertencia! {service} podría no estar ejecutándose correctamente", col.BRIGHT_YELLOW)
+    for nombre, ruta in binarios.items():
+        if os.path.exists(ruta):
+            # Asegurar permisos de ejecución
+            if not os.access(ruta, os.X_OK):
+                os.system(f"chmod +x {ruta}")
+                printc(f"Corregidos permisos para {nombre}", col.BRIGHT_YELLOW)
+        else:
+            printc(f"ERROR: No se encontró binario {nombre} en {ruta}", col.BRIGHT_RED)
     
-    # Verificar puerto administrativo
-    port_check = os.popen("netstat -tuln | grep ':25500'").read().strip()
-    if not port_check:
-        printc("¡Advertencia! El puerto 25500 del panel administrativo no está abierto", col.BRIGHT_YELLOW)
+    # Detener servicios existentes primero
+    printc("Deteniendo servicios previos...", col.BRIGHT_CYAN)
+    os.system("killall -9 nginx php-fpm 2>/dev/null")
+    os.system("kill -9 $(ps aux | grep -v grep | grep 'nginx\|php-fpm' | awk '{print $2}') 2>/dev/null")
+    time.sleep(1)
+    
+    # Verificar directorio de logs
+    logs_dir = "/home/xtreamcodes/iptv_xtream_codes/logs"
+    if not os.path.exists(logs_dir):
+        os.system(f"mkdir -p {logs_dir}")
+    
+    # Iniciar servicios manualmente para evitar problemas
+    printc("Iniciando servicios...")
+    try:
+        # 1. Iniciar MySQL si no está ejecutándose
+        mysql_running = int(os.popen("ps aux | grep mysql | grep -v grep | wc -l").read().strip()) > 0
+        if not mysql_running:
+            os.system("/etc/init.d/mysql restart > /dev/null 2>&1")
+            printc("  → MySQL iniciado", col.BRIGHT_GREEN)
+        
+        # 2. Iniciar PHP-FPM
+        os.system(f"{binarios['php-fpm']} --fpm-config /home/xtreamcodes/iptv_xtream_codes/php/etc/php-fpm.conf > /dev/null 2>&1")
+        printc("  → PHP-FPM iniciado", col.BRIGHT_GREEN)
+        
+        # 3. Iniciar Nginx
+        os.system(f"{binarios['nginx']} > /dev/null 2>&1")
+        printc("  → Nginx iniciado", col.BRIGHT_GREEN)
+        
+        # 4. Iniciar Nginx_RTMP
+        os.system(f"{binarios['nginx_rtmp']} > /dev/null 2>&1")
+        printc("  → Nginx RTMP iniciado", col.BRIGHT_GREEN)
+        
+    except Exception as e:
+        printc(f"Error iniciando servicios: {str(e)}", col.BRIGHT_RED)
+        printc("Intentando método alternativo...", col.BRIGHT_YELLOW)
+        os.system("/home/xtreamcodes/iptv_xtream_codes/start_services.sh > /dev/null 2>&1")
+    
+    # Verificar si los servicios están funcionando
+    time.sleep(5) # Esperar a que los servicios se inicien
+    nginx_running = int(os.popen("ps aux | grep nginx | grep -v grep | wc -l").read().strip()) > 0
+    phpfpm_running = int(os.popen("ps aux | grep php-fpm | grep -v grep | wc -l").read().strip()) > 0
+    mysql_running = int(os.popen("ps aux | grep mysql | grep -v grep | wc -l").read().strip()) > 0
+    
+    if nginx_running and phpfpm_running and mysql_running:
+        printc("Todos los servicios iniciados correctamente", col.BRIGHT_GREEN)
+    else:
+        if not nginx_running:
+            printc("Servicio Nginx NO iniciado. Intentando solución...", col.BRIGHT_RED)
+            os.system(f"{binarios['nginx']} -t > {logs_dir}/nginx_test.log 2>&1") # Probar configuración
+            printc(f"Ver log de prueba en {logs_dir}/nginx_test.log", col.BRIGHT_YELLOW)
+        if not phpfpm_running: 
+            printc("Servicio PHP-FPM NO iniciado. Intentando solución...", col.BRIGHT_RED)
+            os.system(f"{binarios['php-fpm']} -t 2> {logs_dir}/php_test.log") # Probar configuración
+            printc(f"Ver log de prueba en {logs_dir}/php_test.log", col.BRIGHT_YELLOW)
+        if not mysql_running: printc("Servicio MySQL NO iniciado", col.BRIGHT_RED)
+    
+    # Verificar si el puerto está escuchando
+    port_open = len(os.popen("netstat -tuln | grep :25500").read().strip()) > 0
+    if port_open:
+        printc("Puerto 25500 abierto y listo para conexiones", col.BRIGHT_GREEN)
+    else:
+        printc("¡Advertencia! El puerto 25500 del panel administrativo no está abierto", col.BRIGHT_RED)
+        printc("Verificando logs de error de Nginx...", col.BRIGHT_YELLOW)
+        os.system(f"tail -n 20 {logs_dir}/error.log 2>/dev/null || echo 'No hay logs disponibles'")
+        
+        # Intentar una última vez con reinicio completo
+        printc("Intentando un último reinicio de Nginx...", col.BRIGHT_YELLOW)
+        os.system(f"{binarios['nginx']} -s stop 2>/dev/null")
+        time.sleep(1)
+        os.system(f"{binarios['nginx']} 2>/dev/null")
+        time.sleep(2)
+        
+        # Verificar nuevamente
+        port_open = len(os.popen("netstat -tuln | grep :25500").read().strip()) > 0
+        if port_open:
+            printc("Puerto 25500 ahora está abierto y listo", col.BRIGHT_GREEN)
+        else:
+            printc("¡Error persistente! Puerto 25500 sigue cerrado", col.BRIGHT_RED)
 
 def modifyNginx():
-    printc("Modifying Nginx")
+    printc("Modificando Nginx (binarios propios de Xtream UI)")
     rPath = "/home/xtreamcodes/iptv_xtream_codes/nginx/conf/nginx.conf"
+    
+    # Verificar si el binario de nginx existe
+    if not os.path.exists("/home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx"):
+        printc("¡Advertencia! No se encuentra el binario de Nginx. La instalación puede estar incompleta.", col.BRIGHT_RED)
+        return
+    
+    # Asegurar permisos de ejecución para el binario de Nginx
+    os.system("chmod +x /home/xtreamcodes/iptv_xtream_codes/nginx/sbin/nginx")
+    os.system("chmod +x /home/xtreamcodes/iptv_xtream_codes/nginx_rtmp/sbin/nginx_rtmp")
     
     # Verificar si ya está definida la zona de limitación de solicitudes
     rPrevData = open(rPath, "r").read()
@@ -316,10 +478,20 @@ def modifyNginx():
     rPrevData = open(rPath, "r").read()
     if not "listen 25500;" in rPrevData:
         shutil.copy(rPath, "%s.xc" % rPath)
-        rData = "}".join(rPrevData.split("}")[:-1]) + """    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n        client_max_body_size 100M;\n        client_body_timeout 300s;\n        \n        # Timeouts optimizados\n        proxy_connect_timeout 600;\n        proxy_send_timeout 600;\n        proxy_read_timeout 600;\n        fastcgi_read_timeout 600;\n\n        location ~ \.php$ {\n\t\t\tlimit_req zone=one burst=10 nodelay;\n            try_files $uri =404;\n\t\t\tfastcgi_index index.php;\n\t\t\tfastcgi_pass php;\n\t\t\tinclude fastcgi_params;\n\t\t\tfastcgi_buffering on;\n\t\t\tfastcgi_buffers 96 32k;\n\t\t\tfastcgi_buffer_size 32k;\n\t\t\tfastcgi_max_temp_file_size 0;\n\t\t\tfastcgi_keep_conn on;\n\t\t\tfastcgi_connect_timeout 300s;\n\t\t\tfastcgi_send_timeout 300s;\n\t\t\tfastcgi_read_timeout 300s;\n\t\t\tfastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\t\t\tfastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"""
+        rData = "}".join(rPrevData.split("}")[:-1]) + """    server {\n        listen 25500;\n        index index.php index.html index.htm;\n        root /home/xtreamcodes/iptv_xtream_codes/admin/;\n        client_max_body_size 100M;\n        client_body_timeout 300s;\n        access_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_access.log;\n        error_log /home/xtreamcodes/iptv_xtream_codes/logs/admin_error.log;\n        \n        # Timeouts optimizados\n        proxy_connect_timeout 600;\n        proxy_send_timeout 600;\n        proxy_read_timeout 600;\n        fastcgi_read_timeout 600;\n\n        location ~ \.php$ {\n\t\t\tlimit_req zone=one burst=10 nodelay;\n            try_files $uri =404;\n\t\t\tfastcgi_index index.php;\n\t\t\tfastcgi_pass php;\n\t\t\tinclude fastcgi_params;\n\t\t\tfastcgi_buffering on;\n\t\t\tfastcgi_buffers 96 32k;\n\t\t\tfastcgi_buffer_size 32k;\n\t\t\tfastcgi_max_temp_file_size 0;\n\t\t\tfastcgi_keep_conn on;\n\t\t\tfastcgi_connect_timeout 300s;\n\t\t\tfastcgi_send_timeout 300s;\n\t\t\tfastcgi_read_timeout 300s;\n\t\t\tfastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\t\t\tfastcgi_param SCRIPT_NAME $fastcgi_script_name;\n        }\n    }\n}"""
         rFile = open(rPath, "w")
         rFile.write(rData)
         rFile.close()
+    
+    # Verificar archivos de configuración PHP
+    phpFpmConfPath = "/home/xtreamcodes/iptv_xtream_codes/php/etc/php-fpm.conf"
+    if os.path.exists(phpFpmConfPath):
+        printc("Optimizando PHP-FPM para Nginx...", col.BRIGHT_GREEN)
+        # Aumentar el número máximo de procesos PHP-FPM
+        os.system(f"sed -i 's/max_children = 5/max_children = 30/g' {phpFpmConfPath}")
+        os.system(f"sed -i 's/request_terminate_timeout = 300/request_terminate_timeout = 600/g' {phpFpmConfPath}")
+    else:
+        printc("¡Advertencia! No se encuentra el archivo de configuración PHP-FPM.", col.BRIGHT_YELLOW)
 
 def setupSSL(domain=None):
     """Configurar SSL utilizando Let's Encrypt"""
