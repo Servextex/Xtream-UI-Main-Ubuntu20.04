@@ -58,19 +58,66 @@ def printc(rText, rColour=col.BRIGHT_GREEN, rPadding=0, rLimit=46):
     print("%s └─────────────────────────────────────────────────┘ %s" % (rColour, col.ENDC))
     print(" ")
 
+def setupXtreamUser():
+    """Verifica y crea el usuario xtreamcodes si no existe"""
+    printc("Verificando usuario xtreamcodes")
+    
+    # Verificar si existe el directorio base (crearlo si no existe)
+    if not os.path.exists("/home/xtreamcodes"):
+        os.makedirs("/home/xtreamcodes", exist_ok=True)
+    
+    # Comprobar si existe el usuario
+    user_exists = os.popen("id -u xtreamcodes 2>/dev/null || echo -n ''").read().strip()
+    
+    if not user_exists:
+        printc("Usuario 'xtreamcodes' no encontrado. Creando...", col.BRIGHT_YELLOW)
+        # Crear el usuario xtreamcodes
+        os.system("useradd -r -s /bin/bash -d /home/xtreamcodes -m xtreamcodes 2>/dev/null")
+        time.sleep(1)
+        
+        # Segunda verificación para asegurar que se creó el usuario
+        if os.popen("id -u xtreamcodes 2>/dev/null || echo -n ''").read().strip():
+            printc("Usuario xtreamcodes creado exitosamente", col.BRIGHT_GREEN)
+        else:
+            # Intento alternativo si falló el primer método
+            printc("Primer intento fallido. Usando método alternativo...", col.BRIGHT_YELLOW)
+            os.system("adduser --system --shell /bin/bash --home /home/xtreamcodes --disabled-login xtreamcodes 2>/dev/null")
+            time.sleep(1)
+            
+            # Verificación final
+            if os.popen("id -u xtreamcodes 2>/dev/null || echo -n ''").read().strip():
+                printc("Usuario xtreamcodes creado con método alternativo", col.BRIGHT_GREEN)
+            else:
+                printc("ERROR GRAVE: Falló la creación del usuario xtreamcodes", col.BRIGHT_RED)
+                printc("NGINX fallará al iniciar. Se recomienda crear el usuario manualmente.", col.BRIGHT_RED)
+                printc("Ejecute: adduser --system --shell /bin/bash --home /home/xtreamcodes xtreamcodes", col.BRIGHT_YELLOW)
+    else:
+        printc("El usuario xtreamcodes ya existe (ID: " + user_exists + ")", col.BRIGHT_GREEN)
+    
+    # Verificar y corregir permisos de directorios principales
+    if os.path.exists("/home/xtreamcodes"):
+        # Asegurar que el usuario xtreamcodes sea propietario de su directorio home
+        os.system("chown -R xtreamcodes:xtreamcodes /home/xtreamcodes 2>/dev/null")
+        printc("Permisos de directorios verificados y corregidos", col.BRIGHT_GREEN)
+
 def prepare(rType="MAIN"):
     global rPackages
     if rType != "MAIN": rPackages = rPackages[:-1]
-    printc("Preparing Installation")
+    printc("Preparando Instalación")
+    
+    # Crear directorio principal si no existe
+    if not os.path.exists("/home/xtreamcodes"):
+        os.makedirs("/home/xtreamcodes")
+    
     if os.path.isfile('/home/xtreamcodes/iptv_xtream_codes/config'):
         shutil.copyfile('/home/xtreamcodes/iptv_xtream_codes/config', '/tmp/config.xtmp')
     if os.path.isfile('/home/xtreamcodes/iptv_xtream_codes/config'):    
-        os.system('chattr -i /home/xtreamcodes/iptv_xtream_codes/GeoLite2.mmdb > /dev/null')
+        os.system('chattr -i /home/xtreamcodes/iptv_xtream_codes/GeoLite2.mmdb > /dev/null 2>&1')
     for rFile in ["/var/lib/dpkg/lock-frontend", "/var/cache/apt/archives/lock", "/var/lib/dpkg/lock"]:
         try: os.remove(rFile)
         except: pass
-    printc("Updating Operating System")
-    os.system("apt-get update > /dev/null")
+    printc("Actualizando sistema operativo")
+    os.system("apt-get update > /dev/null 2>&1")
     os.system("apt-get -y full-upgrade > /dev/null")
     if rType == "MAIN":
         printc("Install MariaDB 10.5 repository")
